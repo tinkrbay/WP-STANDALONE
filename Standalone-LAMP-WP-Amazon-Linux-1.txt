@@ -1,0 +1,162 @@
+THIS INSTALLATION IS DONE USING AMAZON LINUX-1
+
+Installing web services/dependencies & downloading wordpress code
+
+sudo su
+yum install php php-mysql httpd –y
+cd /home/ec2-user/
+wget https://wordpress.org/latest.tar.gz
+tar -xvf latest.tar.gz
+mv wordpress/* /var/www/html/
+sudo chmod -R 755 /var/www/html/wp-content/
+sudo chown -R apache.apache /var/www/html/wp-content/
+service httpd start
+chkconfig httpd on
+
+Installing MySQL server and configuring the database
+
+sudo su
+yum install mysql-server -y
+service mysqld start
+chkconfig mysqld on
+mysql -u root
+
+NEXT SET OF COMMANDS ARE ENTERED ON THE mysql> prompt 
+
+create database wordpressdb;
+create user wordpressadmin@'%' identified by 'wordpressadmin';
+grant all privileges on wordpressdb.* to wordpressadmin@'%';
+flush privileges;
+exit
+sudo service mysqld restart
+
+Browse to the Public IP of your EC2 instance & Let's go
+Database name: wordpressdb
+Database username: wordpressadmin
+Database password: wordpressadmin
+Database host: Public IP of your EC2 (In the case of distributed stack, this will be the private IP of DB instance)
+Table prefix: Leave it at the default, i.e. wp_
+And try to install
+
+When the installation progresses the installer tries to write a new file into the /var/www/html directory called as wp-config.php
+wp-config.php is the wordpress configuration file.It tells wordpress application of how to connect with the Database service
+When we run the browser based install, the wordpress installer tries to build this file automatically from the values that you provided in step-6
+It tries to build this wp-config file and write it into /var/www/html directory 
+However, the apache webuser does not have any write permissions on the /var/www/html directory
+Hence the web installer cannot create this file on its own & prompts you to create this file manually
+Copy the PHP code contents from the text box on the browser
+Please ensure that you copy only the PHP code (full code) in the text box.
+SSH into EC2 instance and navigate to the apache root directory via cd /var/www/html
+Assume root privileges "sudo su"
+Create a new blank file called wp-config.php and paste the contents of the copied PHP code into this file and save it
+Once done execute a "sudo service httpd restart" command
+
+Finish your wordpress installation
+
+Site Title: any title of your choice
+Username: firstnamelastname
+Password: firstnamelastname
+Check on "Confirm use of weak password"
+Enter your email address
+Leave "Discourage search engines from indexing this site" as unchecked
+Install
+
+View your Wordpress Dashboard & site
+
+After installation you will arrive at your Wordpress login screen. Use the firstnamelastname as credentials
+You will arrive at a Wordpress Dashboard that allows you to customize your website
+On left hand top you will site the site title, click & then visit site
+You will arrive at the homepage 
+Scroll down and get a feel of your first live Wordpress hosted website
+You can observe on the top right hand, that you are logged in as the adminstrator
+If you want to get into dashboard mode, you can click back the site title "top left hand" and then click on dashboard
+
+Observe key files and folders on EC2
+
+SSH into EC2 & cd /var/www/html
+Observe that the wp-config.php occurs at /var/www/html level as narrated above
+Another important directory is called as wp-content. 
+This directory can be accessed as a read/write from the browser
+Note the permissions that we had given to /var/www/html/wp-content/ earlier while downloading wordpress latest.tar.gz
+Basically, this directory hosts three important sub-directories (themes, plugins, uploads)
+Themes directory will store all themes that can be used by wordpress
+Plugins directory will host any plugins, i.e. customized php codes that allows various additional for the default wordpress installation
+Uploads directory will host all the media uploads done via the browser
+
+Observe the /var/www/html/wp-content/uploads directory
+
+Navigate to cd /var/www/html/wp-content/uploads
+Do a "ls" and you will observe this directory to be blank if this is a fresh., first time wordpress installation
+
+Create your first post
+
+Browse and login into your wordpress website
+The Wordpress platform has built-in functions of creating and maintaining posts/blogs
+Click on + icon on the top ribbon
+Add your first post and add a media "browse and upload an image". 
+This image will be embedded into your post. 
+Chase the blue button and publish the post.
+Navigate to the homepage (top left hand > site title > visit site) & scroll down to see your published post
+Feel free to create as many posts you want in a similar manner
+
+Let's correlate the media added and the /var/www/html/wp-content/uploads directory
+
+When you added the media in the post, you uploaded the image file
+This file gets uploaded to /var/www/html/wp-content/uploads directory
+However, the uploads are stored in a certain method, i.e. a sub-directory routine YYYY/MM is automatically added within uploads directory
+SSH into your EC2 instance and cd /var/www/html/wp-content/uploads 
+Do a "ls' and observe the difference
+You will notice that a sub-directory structure has been automatically created on first image upload
+This will look like YYYY & then under YYYY you will find MM directory
+You will notice that the media images that were attached to the posts have been uploaded to MM directory.
+
+Change the default theme
+
+The Wordpress installation comes with a default theme
+You can fancy up your site by changing the default theme
+There are thousands of free and paid themes on the internet for wordpress based on your requirement
+Some are Ecommerce themes, Blogging themes, etc...
+Let's experiment with a paid theme called as Hestia
+SSH into your EC2 instance & download a beautiful theme called as hestia
+
+cd /var/www/html/wp-content/themes
+sudo wget https://downloads.wordpress.org/theme/hestia.1.1.85.zip
+sudo unzip hestia*
+sudo ll
+
+You will realize that all other files except hestia have their permissions & ownership with apache
+The hestia files are owned by root as they were added new
+
+Re-execute a permissions and ownership change on the entire wp-content directory
+
+sudo chmod -R 755 /var/www/html/wp-content/
+sudo chown -R apache.apache /var/www/html/wp-content/
+
+Now go to your wordpress website > login > dashboard > left hand menu > appearances > themes
+
+You should see the newly added hestia theme featured
+IMPORTANT: First Click on the blue button "Live Preview" and it will open up a preview
+On the preview window, change the Text as per your preference 
+Then on the left hand menu "Activate & Publish"
+
+You can visit your site and see the new theme. You can further customize the theme by changing background image, etc..
+
+Make your site an Ecommerce application
+
+Woocommerce is the most popular ecommerce plugin for Wordpress
+SSH into your EC2 instance > sudo su > cd /var/www/html/wp-content/plugins
+
+wget https://downloads.wordpress.org/plugin/woocommerce.3.4.4.zip
+unzip woo*
+chmod -R 755 /var/www/html/wp-content/
+chown -R apache.apache /var/www/html/wp-content/
+
+Go the website's dashboard > plugins > Activate Woocommerce plugin and on the top ribbon you will see a guided setup.. 
+Follow the woocomerce setup and you can import a demo product database
+Download this file into your laptop https://s3.amazonaws.com/labs.thecloudgarage.com/wordpress/data-example-1.csv
+On the Woocommerce import utility., browse and upload this product catalogue and follow 
+Once done, visit your home page and scroll down
+You should be able to see your products listed
+You can add images to these products if required
+
+
